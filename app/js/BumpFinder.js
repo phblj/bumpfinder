@@ -5,8 +5,7 @@
     DEFAULT_URL          = "http://bumpfinder.appspot.com/",
     LOCATION_INTERVAL_MS = 500,
 		SUBMIT_THROTTLE_MS   = 5000,
-    earthRadiusInMiles   = 3959,
-    timeHours            = LOCATION_INTERVAL_MS / 1000 / 60 / 60;
+    earthRadiusInMiles   = 3959;
 
   function latLonToMPH(last, current) {
     return (
@@ -15,7 +14,7 @@
         Math.cos(last.latitude) * Math.cos(current.latitude) *
         Math.cos(current.longitude - last.longitude)
       ) * earthRadiusInMiles
-    ) / timeHours;
+    ) / (current.timestamp - last.timestamp);
   }
 
   function BumpFinder(email, url) {
@@ -29,8 +28,8 @@
     this.averageSpeed = 0;
     this.speedData = [0]; // last 20 speed measurements
     this.location = {
-      last:    { latitude: 0, longitude: 0 },
-      current: { latitude: 0, longitude: 0 }
+			last:    { latitude: 0, longitude: 0, timestamp: 0 },
+      current: { latitude: 0, longitude: 0, timestamp: 0 }
     };
   }
 
@@ -45,6 +44,7 @@
 		var speed;
 		this.location.last = this.location.current;
 		this.location.current = pos.coords;
+		this.location.timestamp = new Date().getTime();
     speed = latLonToMPH(this.location.last, this.location.current);
     if (speed < 120) { this.speedData.push(speed); }
     if (this.speedData.length > 20) { this.speedData.shift(); }
