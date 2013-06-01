@@ -4,16 +4,17 @@
   var bumpFinder;
 
   function onSpeedChecked(e, data) {
-    $("#console").prepend("<li>Speed Checked: "+ data.speed +"</li>");
-    $("#console").prepend("<li>Position: "+ data.latitude +"," + data.longitude + "</li>");
+		$("#speed").text(data.speed);
+		$("#lat").text(data.latitude);
+		$("#lng").text(data.longitude);
   }
 
   function onBumpDetected(e, data) {
-    $("#console").prepend("<li>Bump Detected: "+ data.magnitude +"</li>");
+		$("#mag").text(data.magnitude);
   }
 
   function onSubmit(e, data) {
-    $("#console").prepend("<li><strong>Submitted</strong></li>");
+    $("#console").prepend("<li><strong>Submitted at</strong> "+ new Data() +"</li>");
   }
 
   function runNewFinder() {
