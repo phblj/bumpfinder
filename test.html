@@ -1,0 +1,31 @@
+<html>
+<div id="orient"></div>
+<div id="motion"></div>
+<div id="moz"></div>
+<script>
+
+    if (window.DeviceOrientationEvent) {
+        window.addEventListener('deviceorientation', function (event) {
+            document.getElementById('orient').innerHTML = "alpha=" + event.alpha + "<br>" +
+                                                          "beta=" + event.beta + "<br>" +
+                                                          "gamma=" + event.gamma + "<br>";
+        }, true);
+    }
+
+    if (window.DeviceMotionEvent) {
+        window.addEventListener('devicemotion', function (event) {
+            document.getElementById('motion').innerHTML = "x=" + event.acceleration.x + "<br>" +
+                                                          "y=" + event.acceleration.y + "<br>" +
+                                                          "z=" + event.acceleration.z + "<br>";
+        }, true);
+    }
+
+    window.addEventListener('MozOrientation', function (orientation) {
+        document.getElementById('moz').innerHTML = "x" + orientation.x + "<br>" +
+                                                   "y" + orientation.y + "<br>" +
+                                                   "z" + orientation.z + "<br>";
+    }, true);
+
+</script>
+
+</html>
