@@ -24,6 +24,7 @@
     _.bindAll(this);
     this.email = email;
     this.url = url || DEFAULT_URL;
+		this.isPaused = false;
     this.averageSpeed = 0;
     this.speedData = [0]; // last 20 speed measurements
     this.location = {
@@ -49,7 +50,10 @@
   };
 
   fn.poll = function() {
-    if (!navigator.geolocation) { return; }
+		if (this.isPaused) { return; }
+		if (!navigator.geolocation) {
+			return alert("This browser does not support GPS Data");
+		}
     navigator.geolocation.getCurrentPosition(this.updateSpeed);
   };
 
@@ -65,6 +69,15 @@
       }
     }
   };
+
+	fn.pause = function() {
+		this.isPaused = true;
+	};
+
+	fn.resume = function() {
+		this.isPaused = false;
+		this.poll();
+	};
 
   fn.sanatize = function() {
     return {
