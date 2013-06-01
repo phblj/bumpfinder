@@ -5,6 +5,7 @@
 
   function onSpeedChecked(e, data) {
     $("#console").prepend("<li>Speed Checked: "+ data.speed +"</li>");
+    $("#console").prepend("<li>Position: "+ data.latitude +"," + data.longitude + "</li>");
   }
 
   function onBumpDetected(e, data) {
