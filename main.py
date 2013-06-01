@@ -1,9 +1,7 @@
 
 import os
-import urllib
 import json
 
-from google.appengine.api import users
 from google.appengine.ext import ndb
 from google.appengine.api.urlfetch import fetch, create_rpc, make_fetch_call
 
@@ -52,8 +50,8 @@ def record_old_bump(bump, email, issue_id):
     encoded_payload = '&'.join(map(lambda pair: "%s=%s" % pair, payload.items()))
 
     response = fetch(url='http://test.seeclickfix.com/api/issues/%s/comments.json' % issue_id,
-          payload=encoded_payload,
-          method="POST")
+                     payload=encoded_payload,
+                     method="POST")
 
     logging.info(response.content)
 
@@ -97,7 +95,7 @@ def record_new_bump(bump, lat, lon, email):
 class ClientHandler(webapp2.RequestHandler):
     def get(self):
         template_values = {'flash': 'starting up...', 'DEBUG': DEBUG }
-        template = JINJA_ENVIRONMENT.get_template('client.html')
+        template = JINJA_ENVIRONMENT.get_template('app/index.html')
         self.response.write(template.render(template_values))
 
     def post(self):

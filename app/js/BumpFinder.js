@@ -45,7 +45,7 @@
     if (this.speedData.length > 20) { this.speedData.shift(); }
     this.averageSpeed = this.speedData.reduce(function(x,y) { return x + y; }) / this.speedData.length;
     $(this).trigger("speed_check", this);
-    _.delay(this.poll, 500);
+    _.delay(this.poll, LOCATION_INTERVAL_MS);
   };
 
   fn.poll = function() {
