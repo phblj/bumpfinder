@@ -4,6 +4,7 @@
   var
     DEFAULT_URL          = "http://bumpfinder.appspot.com/",
     LOCATION_INTERVAL_MS = 500,
+		SUBMIT_THROTTLE_MS   = 5000,
     earthRadiusInMiles   = 3959,
     timeHours            = LOCATION_INTERVAL_MS / 1000 / 60 / 60;
 
@@ -92,7 +93,7 @@
     };
   };
 
-  fn.submit = _.throttle(function() {
+  fn.submit = _.debounce(function() {
     $(this).trigger("submit", this.sanatize());
     $.ajax({
       type:     "POST",
@@ -101,7 +102,7 @@
       success:  this.onSuccess,
       dataType: "json"
     });
-  }, 5000);
+  }, SUBMIT_THROTTLE_MS);
 
   exports.BumpFinder = BumpFinder;
 
