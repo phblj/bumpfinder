@@ -12,15 +12,15 @@ import webapp2
 
 import logging
 
-DEBUG = False
+DEBUG = True
+API_KEY = '2be32e012a18e934a254ddcabb8db55455b9349c'
+
+DEVICE_OS = 'BumpFinderApp'
+DEVICE_NAME = 'http://bumpfinder.appspot.com/'
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     extensions=['jinja2.ext.autoescape'])
-
-CONSTANTS = {
-
-}
 
 
 def location_key(lat, lon):
@@ -36,9 +36,32 @@ class Bump(ndb.Model):
     magnitude = ndb.FloatProperty()
     created = ndb.DateTimeProperty(auto_now_add=True)
     reporter = ndb.StringProperty()
+    issue_id = ndb.IntegerProperty()
 
 
-def record_bump(lat, lon, email, bumps):
+def record_old_bump(bump, email, issue_id):
+    payload = {
+        'api_key': API_KEY,
+        'comment[comment]': "I felt the pothole, too!\n\n[auto-generated via Bump Finder app: http://bumpfinder.appspot.com/]",
+        'comment[email]': email,
+        'comment[name]': email.split('@')[0],
+        'comment[device_os]': DEVICE_OS,
+        'comment[device_name]': DEVICE_NAME
+    }
+
+    encoded_payload = '&'.join(map(lambda pair: "%s=%s" % pair, payload.items()))
+
+    response = fetch(url='http://test.seeclickfix.com/api/issues/%s/comments.json' % issue_id,
+          payload=encoded_payload,
+          method="POST")
+
+    logging.info(response.content)
+
+    bump.issue_id = issue_id
+    bump.put()
+
+
+def record_new_bump(bump, lat, lon, email):
     geo_json = fetch("http://maps.googleapis.com/maps/api/geocode/json?latlng=%s,%s&sensor=true" % (lat, lon))
     logging.info(geo_json.content)
     geo_data = json.loads(geo_json.content)['results']
@@ -49,31 +72,31 @@ def record_bump(lat, lon, email, bumps):
         address = 'Address Unknown'
 
     payload = {
-        'api_key': '2be32e012a18e934a254ddcabb8db55455b9349c',
-        'issue[summary]': 'A pothole was felt %s times' % len(bumps),
-        'issue[description]': '[Auto-generated from bump-finder using the accelerometer of my mobile device.]',
-        'issue[reporter_display]': 'Bump Finder',
+        'api_key': API_KEY,
+        'issue[summary]': 'Pothole alert!',
+        'issue[description]': '[auto-generated via Bump Finder app: http://bumpfinder.appspot.com/]',
+        'issue[reporter_display]': email.split('@')[0],
         'issue[reporter_email]': email,
         'issue[lat]': lat,
         'issue[lng]': lon,
-        'issue[address]': address
+        'issue[address]': address,
+        'issue[device_os]': DEVICE_OS,
+        'issue[device_name]': DEVICE_NAME,
     }
 
     encoded_payload = '&'.join(map(lambda pair: "%s=%s" % pair, payload.items()))
 
-    rpc = create_rpc()
-    make_fetch_call(rpc=rpc,
-                    url="http://test.seeclickfix.com/api/issues.json",
-                    payload=encoded_payload,
-                    method="POST")
+    response = fetch(url="http://test.seeclickfix.com/api/issues.json",
+                     payload=encoded_payload,
+                     method="POST")
 
-    if DEBUG:
-        logging.info(rpc.get_result().content)
+    bump.issue_id = json.loads(response.content)['id']
+    bump.put()
 
 
 class ClientHandler(webapp2.RequestHandler):
     def get(self):
-        template_values = {'flash': 'starting up...'}
+        template_values = {'flash': 'starting up...', 'DEBUG': DEBUG }
         template = JINJA_ENVIRONMENT.get_template('client.html')
         self.response.write(template.render(template_values))
 
@@ -82,6 +105,9 @@ class ClientHandler(webapp2.RequestHandler):
         lon = self.request.get('longitude')
         if lat and lon:
             loc_key = location_key(lat, lon)
+            bump_query = Bump.query(ancestor=loc_key)
+            old_bumps = bump_query.fetch(1)
+
             bump = Bump(parent=loc_key)
             bump.magnitude = float(self.request.get('magnitude'))
             speed = self.request.get('speed', 0.0)
@@ -91,13 +117,12 @@ class ClientHandler(webapp2.RequestHandler):
             bump.reporter = self.request.remote_addr
             email = self.request.get('email')
             bump.email = email
-            bump.put()
             flash = 'BUMP RECORDED'
 
-            bump_query = Bump.query(ancestor=loc_key)
-            bumps = bump_query.fetch(100)
-            flash += "<br>recorded bump #%s here" % len(bumps)
-            record_bump(lat, lon, email, bumps)
+            if old_bumps:
+                record_old_bump(bump, email, old_bumps[0].issue_id)
+            else:
+                record_new_bump(bump, lat, lon, email)
         else:
             flash = 'no location data-- bump not saved'
 

@@ -71,7 +71,7 @@
 
 <script>
     var email = localStorage['email'];
-    if (email === undefined) {
+    if (email === undefined || email == "bump-finder@seeclickfix.com") {
         email = prompt("What's your email address?", "bump-finder@seeclickfix.com");
         localStorage['email'] = email;
     }
