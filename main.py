@@ -12,11 +12,15 @@ import webapp2
 
 import logging
 
-DEBUG=False
+DEBUG = False
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     extensions=['jinja2.ext.autoescape'])
+
+CONSTANTS = {
+
+}
 
 
 def location_key(lat, lon):
@@ -34,7 +38,7 @@ class Bump(ndb.Model):
     reporter = ndb.StringProperty()
 
 
-def record_bump(lat, lon, bumps):
+def record_bump(lat, lon, email, bumps):
     geo_json = fetch("http://maps.googleapis.com/maps/api/geocode/json?latlng=%s,%s&sensor=true" % (lat, lon))
     logging.info(geo_json.content)
     geo_data = json.loads(geo_json.content)['results']
@@ -48,8 +52,8 @@ def record_bump(lat, lon, bumps):
         'api_key': '2be32e012a18e934a254ddcabb8db55455b9349c',
         'issue[summary]': 'A pothole was felt %s times' % len(bumps),
         'issue[description]': '[Auto-generated from bump-finder using the accelerometer of my mobile device.]',
-        'issue[reporter_display]': 'Zack',
-        'issue[reporter_email]': 'zack@seeclickfix.com',
+        'issue[reporter_display]': 'Bump Finder',
+        'issue[reporter_email]': email,
         'issue[lat]': lat,
         'issue[lng]': lon,
         'issue[address]': address
@@ -80,22 +84,27 @@ class ClientHandler(webapp2.RequestHandler):
             loc_key = location_key(lat, lon)
             bump = Bump(parent=loc_key)
             bump.magnitude = float(self.request.get('magnitude'))
-            speed = self.request.get('speed')
+            speed = self.request.get('speed', 0.0)
             if speed:
                 speed = float(speed)
                 bump.speed = speed
             bump.reporter = self.request.remote_addr
+            email = self.request.get('email')
+            bump.email = email
             bump.put()
             flash = 'BUMP RECORDED'
 
             bump_query = Bump.query(ancestor=loc_key)
             bumps = bump_query.fetch(100)
             flash += "<br>recorded bump #%s here" % len(bumps)
-            record_bump(lat, lon, bumps)
+            record_bump(lat, lon, email, bumps)
         else:
             flash = 'no location data-- bump not saved'
 
-        template_values = {'flash': flash, 'DEBUG': DEBUG}
+        template_values = {
+            'flash': flash,
+            'DEBUG': DEBUG
+        }
         template = JINJA_ENVIRONMENT.get_template('client.html')
         self.response.write(template.render(template_values))
 

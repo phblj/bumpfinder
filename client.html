@@ -63,12 +63,20 @@
     <input name="longitude" id="longitude" {% if not DEBUG %}type="hidden" {% endif %}/>
     <input name="speed" id="speed" {% if not DEBUG %}type="hidden" {% endif %}/>
     <input name="magnitude" id="magnitude" {% if not DEBUG %}type="hidden" {% endif %}/>
+    <input name="email" id="email" type="text" value="" style="width: 400px; font-size: 16pt;" />
     {% if DEBUG %}<input type="submit" />{% endif %}
 </form>
 
 </body>
 
 <script>
+    var email = localStorage['email'];
+    if (email === undefined) {
+        email = prompt("What's your email address?", "bump-finder@seeclickfix.com");
+        localStorage['email'] = email;
+    }
+    document.getElementById("email").value = email;
+
   // Give 5 seconds before recording anything
   setTimeout(startUp, 5000);
 </script>
