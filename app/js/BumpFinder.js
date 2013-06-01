@@ -10,9 +10,9 @@
   function latLonToMPH(last, current) {
     return (
       Math.acos(
-        Math.sin(last.lat) * Math.sin(current.lat) +
-        Math.cos(last.lat) * Math.cos(current.lat) *
-        Math.cos(current.lng - last.lng)
+        Math.sin(last.latitude) * Math.sin(current.latitude) +
+        Math.cos(last.latitude) * Math.cos(current.latitude) *
+        Math.cos(current.longitude - last.longitude)
       ) * earthRadiusInMiles
     ) / timeHours;
   }
@@ -28,8 +28,8 @@
     this.averageSpeed = 0;
     this.speedData = [0]; // last 20 speed measurements
     this.location = {
-      last:    { lat: 0, lng: 0 },
-      current: { lat: 0, lng: 0 }
+      last:    { latitude: 0, longitude: 0 },
+      current: { latitude: 0, longitude: 0 }
     };
   }
 
@@ -40,8 +40,11 @@
     this.poll();
   };
 
-  fn.updateSpeed = function() {
-    var speed = latLonToMPH(this.location.last, this.location.current);
+  fn.updateSpeed = function(pos) {
+		var speed;
+		this.location.last = this.location.current;
+		this.location.current = pos.coords;
+    speed = latLonToMPH(this.location.last, this.location.current);
     if (speed < 120) { this.speedData.push(speed); }
     if (this.speedData.length > 20) { this.speedData.shift(); }
     this.averageSpeed = this.speedData.reduce(function(x,y) { return x + y; }) / this.speedData.length;
@@ -81,8 +84,8 @@
 
   fn.sanatize = function() {
     return {
-      latitude:  this.location.current.lat,
-      longitude: this.location.current.lng,
+      latitude:  this.location.current.latitude,
+      longitude: this.location.current.longitude,
       speed:     this.averageSpeed,
       magnitude: this.magnitude,
       email:     this.email
