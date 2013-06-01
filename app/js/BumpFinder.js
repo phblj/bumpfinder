@@ -44,7 +44,7 @@
     if (speed < 120) { this.speedData.push(speed); }
     if (this.speedData.length > 20) { this.speedData.shift(); }
     this.averageSpeed = this.speedData.reduce(function(x,y) { return x + y; }) / this.speedData.length;
-    $(this).trigger("speed_check", this);
+    $(this).trigger("speed_check", this.sanatize());
     _.delay(this.poll, 500);
   };
 
@@ -59,7 +59,7 @@
       Math.abs(e.acceleration.y) +
       Math.abs(e.acceleration.z);
     if (this.magnitude > 10.0) {
-      $(this).trigger("bump_detected", this);
+      $(this).trigger("bump_detected", this.sanatize());
       if (this.averageSpeed > 0) {
         this.submit();
       }
@@ -68,8 +68,8 @@
 
   fn.sanatize = function() {
     return {
-      latitude:  this.current.lat,
-      longitude: this.current.lng,
+      latitude:  this.location.current.lat,
+      longitude: this.location.current.lng,
       speed:     this.averageSpeed,
       magnitude: this.magnitude,
       email:     this.email
@@ -77,7 +77,7 @@
   };
 
   fn.submit = _.throttle(function() {
-    $(this).trigger("submit", this);
+    $(this).trigger("submit", this.sanatize());
     $.ajax({
       type:     "POST",
       url:      this.url,

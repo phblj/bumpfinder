@@ -4,7 +4,7 @@
   var bumpFinder;
 
   function onSpeedChecked(e, data) {
-    $("#console").prepend("<li>Speed Checked: "+ data.averageSpeed +"</li>");
+    $("#console").prepend("<li>Speed Checked: "+ data.speed +"</li>");
   }
 
   function onBumpDetected(e, data) {
