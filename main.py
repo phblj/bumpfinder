@@ -101,12 +101,16 @@ class ClientHandler(webapp2.RequestHandler):
         self.response.write(template.render(template_values))
 
     def post(self):
+        template_values = {
+            'DEBUG': DEBUG
+        }
+
         lat = self.request.get('latitude')
         lon = self.request.get('longitude')
         if lat and lon:
             loc_key = location_key(lat, lon)
             bump_query = Bump.query(ancestor=loc_key)
-            old_bumps = bump_query.fetch(1)
+            old_bumps = bump_query.fetch(100)
 
             bump = Bump(parent=loc_key)
             bump.magnitude = float(self.request.get('magnitude'))
@@ -117,21 +121,22 @@ class ClientHandler(webapp2.RequestHandler):
             bump.reporter = self.request.remote_addr
             email = self.request.get('email')
             bump.email = email
-            flash = 'BUMP RECORDED'
+            template_values['flash'] = 'BUMP RECORDED'
 
             if old_bumps:
                 record_old_bump(bump, email, old_bumps[0].issue_id)
+                template_values['previous_reports'] = len(old_bumps)
             else:
                 record_new_bump(bump, lat, lon, email)
+                template_values['previous_reports'] = 0
         else:
-            flash = 'no location data-- bump not saved'
+            template_values['flash'] = 'no location data-- bump not saved'
 
-        template_values = {
-            'flash': flash,
-            'DEBUG': DEBUG
-        }
-        template = JINJA_ENVIRONMENT.get_template('client.html')
-        self.response.write(template.render(template_values))
+        if 'json' in self.request.headers['Accept']:
+            self.response.write(template_values)
+        else:
+            template = JINJA_ENVIRONMENT.get_template('client.html')
+            self.response.write(template.render(template_values))
 
 app = webapp2.WSGIApplication([
     ('/', ClientHandler)
