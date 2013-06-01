@@ -8,8 +8,8 @@
     earthRadiusInMiles   = 3959;
 
   function latLonToMPH(last, current) {
-    if (last.latitude == current.latitude &&
-        last.longitude == current.longitude) {
+    if (last.latitude === current.latitude &&
+        last.longitude === current.longitude) {
         return 0;
     }
     return (
@@ -48,7 +48,7 @@
 		var speed;
 		this.location.last = this.location.current;
 		this.location.current = pos.coords;
-		this.location.timestamp = new Date().getTime();
+		this.location.current.timestamp = new Date().getTime();
     speed = latLonToMPH(this.location.last, this.location.current);
     if (speed < 120) { this.speedData.push(speed); }
     if (this.speedData.length > 20) { this.speedData.shift(); }
