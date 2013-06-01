@@ -1,0 +1,76 @@
+<html>
+<head>
+<script>
+    var LOCATION_INTERVAL_MS = 500;
+    var speeds = [0]; // last 20 speed measurements
+
+    var latLonToMPH = function (lat1, lon1, lat2, lon2) {
+        var earthRadiusInMiles = 3959;
+        var distanceMiles = Math.acos(Math.sin(lat1)*Math.sin(lat2) +
+                        Math.cos(lat1)*Math.cos(lat2) *
+                        Math.cos(lon2-lon1)) * earthRadiusInMiles;
+        var timeHours = LOCATION_INTERVAL_MS / 1000 / 60 / 60;
+        return distanceMiles / timeHours;
+    }
+
+    function updateLocation() {
+      document.getElementById("flash").style.display = "none";
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          var oldLat = document.getElementById("latitude").value;
+          var oldLon = document.getElementById("longitude").value;
+          var newLat = position.coords.latitude;
+          var newLon = position.coords.longitude;
+          var speed = latLonToMPH(oldLat, oldLon, newLat, newLon);
+          if (speed < 120) {
+              speeds.push(speed);
+              if (speeds.length > 20) speeds.shift();
+          }
+          document.getElementById("speed").value = speeds.reduce(function(x,y) { return x+y; }) / speeds.length;
+          document.getElementById("latitude").value = newLat;
+          document.getElementById("longitude").value = newLon;
+        });
+      }
+      else{alert("Geolocation is not supported by this browser.");}
+      setTimeout(updateLocation, 500);
+    }
+
+    function startUp() {
+        updateLocation()
+
+        window.ondevicemotion = function(event) {
+            var xVal = event.accelerationIncludingGravity.x;
+            var yVal = event.accelerationIncludingGravity.y;
+            var zVal = event.accelerationIncludingGravity.z;
+            var all_accel = Math.abs(xVal)+Math.abs(yVal)+Math.abs(zVal) - 9.8;
+            document.getElementById("magnitude").value = all_accel;
+
+            if (all_accel > 10.0 && document.getElementById("speed").value > 0) {
+                var output = document.getElementById("output");
+                document.getElementById("hidden_form").submit();
+            }
+        }
+    }
+
+
+</script>
+
+</head>
+<body>
+<div id="flash" style="background-color: #F88; padding: 4px;">{{flash}}</div>
+<form id="hidden_form" method="post">
+    <input name="latitude" id="latitude" {% if not DEBUG %}type="hidden" {% endif %}/>
+    <input name="longitude" id="longitude" {% if not DEBUG %}type="hidden" {% endif %}/>
+    <input name="speed" id="speed" {% if not DEBUG %}type="hidden" {% endif %}/>
+    <input name="magnitude" id="magnitude" {% if not DEBUG %}type="hidden" {% endif %}/>
+    {% if DEBUG %}<input type="submit" />{% endif %}
+</form>
+
+</body>
+
+<script>
+  // Give 5 seconds before recording anything
+  setTimeout(startUp, 5000);
+</script>
+
+</html>
