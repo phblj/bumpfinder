@@ -8,6 +8,10 @@
     timeHours            = LOCATION_INTERVAL_MS / 1000 / 60 / 60;
 
   function latLonToMPH(last, current) {
+    if (last.latitude == current.latitude &&
+        last.longitude == current.longitude) {
+        return 0;
+    }
     return (
       Math.acos(
         Math.sin(last.latitude) * Math.sin(current.latitude) +
