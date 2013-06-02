@@ -4,17 +4,23 @@
   var bumpFinder;
 
   function onSpeedChecked(e, data) {
+		var prog_val = Math.floor(data.magnitude * 10);
+		$("#progbar").css("width", "" + prog_val + "%");
 		$("#speed").text(data.speed);
 		$("#lat").text(data.latitude);
 		$("#lng").text(data.longitude);
-  }
-
-  function onBumpDetected(e, data) {
 		$("#mag").text(data.magnitude);
   }
 
+  function onBumpDetected(e, data) {
+		$("#prog").addClass("progress-danger");
+		_.delay(function() {
+			$("#prog").removeClass("progress-danger");
+		}, 750);
+  }
+
   function onSubmit(e, data) {
-    $("#console").prepend("<li><strong>Submitted at</strong> "+ new Data() +"</li>");
+    $("#console").prepend("<li><strong>Submitted at</strong> "+ new Date() +"</li>");
   }
 
   function runNewFinder() {
