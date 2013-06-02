@@ -4,6 +4,7 @@
   var
     DEFAULT_URL          = "http://bumpfinder.appspot.com/",
     LOCATION_INTERVAL_MS = 500,
+		SPEED_THRESHOLD      = 0, // 10, // Debugging
 		SUBMIT_THROTTLE_MS   = 5000,
     earthRadiusInMiles   = 3959;
 
@@ -72,7 +73,7 @@
       Math.abs(e.acceleration.z);
     if (this.magnitude > 10.0) {
       $(this).trigger("bump_detected", this.sanatize());
-      if (this.averageSpeed > 0) {
+      if (this.averageSpeed > SPEED_THRESHOLD) {
         this.submit();
       }
     }
@@ -99,13 +100,13 @@
 
   fn.submit = _.debounce(function() {
     $(this).trigger("submit", this.sanatize());
-    $.ajax({
-      type:     "POST",
-      url:      this.url,
-      data:     this.sanatize(),
-      success:  this.onSuccess,
-      dataType: "json"
-    });
+    // $.ajax({
+      // type:     "POST",
+      // url:      this.url,
+      // data:     this.sanatize(),
+      // // success:  this.onSuccess,
+      // dataType: "json"
+    // });
   }, SUBMIT_THROTTLE_MS);
 
   exports.BumpFinder = BumpFinder;
