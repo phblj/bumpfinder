@@ -37,9 +37,24 @@
     runNewFinder();
   }
 
+	function onPauseResume() {
+		if (bumpFinder == null) { return; }
+		if (bumpFinder.isPaused) {
+			bumpFinder.resume();
+			$("#pause_resume_text").text("Pause");
+			$("#pause_resume>i").addClass("icon-pause").removeClass("icon-play");
+		}
+		else {
+			bumpFinder.pause();
+			$("#pause_resume_text").text("Resume");
+			$("#pause_resume>i").addClass("icon-play").removeClass("icon-pause");
+		}
+	}
+
   $(function() {
     $("#email").val(localStorage.user_email);
     $("#acceptEmail").on("click", setEmail);
+		$("#pause_resume").on("click", onPauseResume);
     if (localStorage.user_email != null && localStorage.user_email !== "") {
       runNewFinder();
     }
